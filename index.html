@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <!-- =========================================================================
+       PRODUCTION CONFIGURATION PLACEHOLDER
+       Replace "https://your-domain.com/" with your production domain
+       (e.g., "https://taskflow.io/") after deployment to hosting environment.
+       ========================================================================= -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow - Liquid Glass AI Productivity Platform</title>
+  <meta name="description" content="TaskFlow is a modern AI-powered productivity and team collaboration platform featuring Liquid Glass design, real-time analytics, and automated workflows.">
+  <meta name="keywords" content="TaskFlow, Liquid Glass, AI Workflows, Productivity, Team Collaboration">
+  <link rel="canonical" href="https://your-domain.com/">
+
+  <!-- Open Graph Meta -->
+  <meta property="og:title" content="TaskFlow - Work smarter. Get more done.">
+  <meta property="og:description" content="Bring your projects, tasks, teams, and workflows together in one Liquid Glass workspace.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://your-domain.com/">
+  <meta property="og:image" content="https://your-domain.com/favicon.svg">
+
+  <!-- Twitter / X Card Meta -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="TaskFlow - Liquid Glass AI Productivity">
+  <meta name="twitter:description" content="Bring projects, tasks, and Gemini AI workflows into one Liquid Glass workspace.">
+  <meta name="twitter:image" content="https://your-domain.com/favicon.svg">
+
+  <!-- SVG Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- Liquid Glass Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Animated Fluid Ambient Mesh Background -->
+  <div class="fluid-ambient-background">
+    <div class="fluid-orb orb-1"></div>
+    <div class="fluid-orb orb-2"></div>
+    <div class="fluid-orb orb-3"></div>
+  </div>
+
+  <!-- Glass Toast Notification Container -->
+  <div class="glass-toast-container" id="glassToastContainer"></div>
+
+  <!-- ==========================================
+       1. LIQUID GLASS NAVBAR
+       ========================================== -->
+  <header class="header" id="mainHeader">
+    <div class="container nav-container">
+      <a href="#" class="brand-logo" id="brandLogo">
+        <div class="logo-symbol">💧</div>
+        <span>TaskFlow</span>
+      </a>
+
+      <nav>
+        <ul class="nav-links" id="navLinks">
+          <li class="nav-item-dropdown">
+            <a href="#product" class="nav-link">Product <span class="nav-arrow">▾</span></a>
+            <div class="mega-dropdown">
+              <a href="#ai-engine" class="dropdown-item">
+                <div class="dropdown-icon">🤖</div>
+                <div>
+                  <div class="dropdown-title">AI Task Assistant</div>
+                  <div class="dropdown-sub">Google Gemini 3.6 Flash task breakdown</div>
+                </div>
+              </a>
+              <a href="#product" class="dropdown-item">
+                <div class="dropdown-icon">📊</div>
+                <div>
+                  <div class="dropdown-title">Kanban & Gantt Timelines</div>
+                  <div class="dropdown-sub">Interactive sprint planning boards</div>
+                </div>
+              </a>
+              <a href="#features" class="dropdown-item">
+                <div class="dropdown-icon">⚡</div>
+                <div>
+                  <div class="dropdown-title">Workflow Automation</div>
+                  <div class="dropdown-sub">Trigger status alerts & webhooks</div>
+                </div>
+              </a>
+            </div>
+          </li>
+
+          <li><a href="#features" class="nav-link">Features</a></li>
+          <li><a href="#pricing" class="nav-link">Pricing</a></li>
+
+          <li class="nav-item-dropdown">
+            <a href="#resources" class="nav-link">Resources <span class="nav-arrow">▾</span></a>
+            <div class="mega-dropdown">
+              <a href="#about" class="dropdown-item">
+                <div class="dropdown-icon">📖</div>
+                <div>
+                  <div class="dropdown-title">API Documentation</div>
+                  <div class="dropdown-sub">REST API guides & webhooks</div>
+                </div>
+              </a>
+              <a href="#resources" class="dropdown-item">
+                <div class="dropdown-icon">⭐</div>
+                <div>
+                  <div class="dropdown-title">Customer Reviews</div>
+                  <div class="dropdown-sub">Customer stories & workflow trials</div>
+                </div>
+              </a>
+            </div>
+          </li>
+
+          <li class="nav-item-dropdown">
+            <a href="#about" class="nav-link">About <span class="nav-arrow">▾</span></a>
+            <div class="mega-dropdown">
+              <a href="#about" class="dropdown-item">
+                <div class="dropdown-icon">🏢</div>
+                <div>
+                  <div class="dropdown-title">About TaskFlow</div>
+                  <div class="dropdown-sub">Our mission to help teams work smarter</div>
+                </div>
+              </a>
+            </div>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle Theme Mode" title="Toggle Theme">🌙</button>
+        <a href="#pricing" class="btn btn-primary" id="getStartedBtn">Get Started</a>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ==========================================
+         2. HERO SECTION
+         ========================================== -->
+    <section class="hero-section" id="hero">
+      <div class="container">
+        <div class="hero-content">
+          <div class="section-badge">
+            <span>✨ Liquid Glass Workspace</span>
+          </div>
+          <h1 class="hero-title">
+            Work smarter. <br><span class="gradient-text">Get more done.</span>
+          </h1>
+          <p class="hero-supporting">
+            TaskFlow brings your projects, tasks, teams, and workflows together in one powerful liquid glass workspace.
+          </p>
+
+          <div class="hero-cta-group">
+            <a href="#pricing" class="btn btn-primary" id="heroStartFreeBtn">Start Free</a>
+            <a href="#dashboard" class="btn btn-secondary" id="heroViewDemoBtn">View Demo</a>
+          </div>
+        </div>
+
+        <!-- SaaS Dashboard Product Preview -->
+        <div class="hero-preview-wrapper" id="dashboard">
+          <div class="hero-mockup-card">
+            <div class="mockup-header">
+              <div class="mockup-dots">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+              </div>
+              <div class="mockup-search">🔍 Search tasks, projects, & team members...</div>
+              <span style="font-size:0.8rem; font-weight:700; color:var(--brand-emerald)">● DEMO WORKSPACE | LIVE SYNC</span>
+            </div>
+
+            <div class="mockup-body">
+              <div class="dash-grid-layout">
+                <aside style="border-right: 1px solid var(--border-liquid); padding-right:1rem;">
+                  <ul class="dash-nav-list">
+                    <li class="dash-nav-item active" data-view="overview">📊 Executive Overview</li>
+                    <li class="dash-nav-item" data-view="tasks">✅ Tasks Kanban (12)</li>
+                    <li class="dash-nav-item" data-view="projects">📁 Active Projects (8)</li>
+                    <li class="dash-nav-item" data-view="team">👥 Team Workspace</li>
+                  </ul>
+                </aside>
+
+                <div class="dash-view-content">
+                  <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem;">
+                    <div class="metric-pill-card" style="padding:1.25rem;">
+                      <div style="font-size:0.8rem; color:var(--text-muted);">Tasks Completed</div>
+                      <div style="font-size:1.75rem; font-weight:800;">1,284</div>
+                    </div>
+                    <div class="metric-pill-card" style="padding:1.25rem;">
+                      <div style="font-size:0.8rem; color:var(--text-muted);">Active Projects</div>
+                      <div style="font-size:1.75rem; font-weight:800;">48</div>
+                    </div>
+                    <div class="metric-pill-card" style="padding:1.25rem;">
+                      <div style="font-size:0.8rem; color:var(--text-muted);">Team Efficiency</div>
+                      <div style="font-size:1.75rem; font-weight:800; color:var(--brand-emerald)">94%</div>
+                    </div>
+                  </div>
+
+                  <div style="background:var(--bg-body); border:1px solid var(--border-liquid); border-radius:var(--radius-md); padding:1.25rem; height:220px; position:relative;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.85rem; font-weight:700;">
+                      <span>Real-Time Productivity Throughput</span>
+                      <span id="liveTaskCounter" style="color:var(--brand-primary)">1,704 tasks/min</span>
+                    </div>
+                    <canvas id="heroChart" style="width:100%; height:150px; display:block;"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         3. TRUST SECTION
+         ========================================== -->
+    <section class="trust-section">
+      <div class="container">
+        <div class="trust-title">BUILT FOR MODERN TEAMS</div>
+        <p style="text-align:center; color:var(--text-muted); font-size:0.85rem; margin-top:-0.5rem; margin-bottom:1.5rem;">Designed for teams like yours</p>
+        <div class="trust-logos">
+          <div class="trust-logo-item">🚀 ACME SaaS</div>
+          <div class="trust-logo-item">⚡ HYPERSCALE</div>
+          <div class="trust-logo-item">🌐 NEXUS AI</div>
+          <div class="trust-logo-item">🛡️ CLOUDLOGIC</div>
+          <div class="trust-logo-item">💎 VANCE MEDIA</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         4. FEATURES SECTION (6 LIQUID CARDS)
+         ========================================== -->
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">Capabilities</div>
+          <h2 class="section-title">Everything You Need to <span class="gradient-text">Streamline Work</span></h2>
+          <p class="section-subtitle">TaskFlow equips startups, remote teams, and growing businesses with tools to plan, execute, and deliver projects faster.</p>
+        </div>
+
+        <div class="features-grid">
+          <div class="card feature-card">
+            <div class="feature-icon-box">🤖</div>
+            <h3 class="feature-card-title">AI Task Assistant</h3>
+            <p class="feature-card-desc">Automatically break down complex project briefs into actionable subtasks with intelligent priority tags and deadlines.</p>
+          </div>
+
+          <div class="card feature-card">
+            <div class="feature-icon-box">📊</div>
+            <h3 class="feature-card-title">Smart Project Management</h3>
+            <p class="feature-card-desc">Switch seamlessly between Kanban boards, Gantt timelines, interactive lists, and workload views.</p>
+          </div>
+
+          <div class="card feature-card">
+            <div class="feature-icon-box">👥</div>
+            <h3 class="feature-card-title">Team Collaboration</h3>
+            <p class="feature-card-desc">Real-time co-editing, thread comments, file sharing, and instant mentions keep remote teams perfectly aligned.</p>
+          </div>
+
+          <div class="card feature-card">
+            <div class="feature-icon-box">⚡</div>
+            <h3 class="feature-card-title">Workflow Automation</h3>
+            <p class="feature-card-desc">Trigger automatic status updates, slack notifications, and email alerts when tasks move through your pipeline.</p>
+          </div>
+
+          <div class="card feature-card">
+            <div class="feature-icon-box">📈</div>
+            <h3 class="feature-card-title">Productivity Analytics</h3>
+            <p class="feature-card-desc">Gain actionable insights into sprint velocity, bottleneck resolution, and individual team member bandwidth.</p>
+          </div>
+
+          <div class="card feature-card">
+            <div class="feature-icon-box">🔔</div>
+            <h3 class="feature-card-title">Real-Time Notifications</h3>
+            <p class="feature-card-desc">Never miss a critical deadline with smart desktop, mobile push, and consolidated daily email summaries.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         5. HOW IT WORKS
+         ========================================== -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">Simple Process</div>
+          <h2 class="section-title">How TaskFlow <span class="gradient-text">Drives Results</span></h2>
+          <p class="section-subtitle">Get your entire team onboarded and operational in three straightforward steps.</p>
+        </div>
+
+        <div class="how-it-works-grid">
+          <div class="card step-card">
+            <div class="step-number">01</div>
+            <h3 class="step-title">Create your workspace</h3>
+            <p class="step-desc">Set up your company hub, invite team members, and define custom project categories in under 2 minutes.</p>
+          </div>
+
+          <div class="card step-card">
+            <div class="step-number">02</div>
+            <h3 class="step-title">Organize your work</h3>
+            <p class="step-desc">Import existing tasks, use AI templates, and organize sprints into clear Kanban columns or Gantt charts.</p>
+          </div>
+
+          <div class="card step-card">
+            <div class="step-number">03</div>
+            <h3 class="step-title">Grow your productivity</h3>
+            <p class="step-desc">Automate repetitive assignments, track real-time analytics, and achieve a 32% boost in team throughput.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         6. PRODUCT DASHBOARD (INTERACTIVE KANBAN BOARD)
+         ========================================== -->
+    <section class="section" id="product">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">Interactive Sprint Board</div>
+          <h2 class="section-title">Designed for <span class="gradient-text">Clarity & Speed</span></h2>
+          <p class="section-subtitle">Click any task below to advance it live across your Kanban columns (To Do ➔ In Progress ➔ Completed).</p>
+        </div>
+
+        <div class="dashboard-interactive-window">
+          <div class="kanban-board-grid">
+            <!-- Column 1: To Do -->
+            <div class="kanban-col">
+              <div class="kanban-col-header">
+                <span>📌 TO DO (3)</span>
+                <span style="color:var(--brand-primary)">+</span>
+              </div>
+              <div class="kanban-card" data-task-id="k1">
+                <div class="kanban-card-title">Setup Security Audit Logging</div>
+                <div class="kanban-card-sub"><span>Security</span> <span style="color:var(--brand-amber)">● High</span></div>
+              </div>
+              <div class="kanban-card" data-task-id="k2">
+                <div class="kanban-card-title">Configure Slack Webhook Trigger</div>
+                <div class="kanban-card-sub"><span>Integration</span> <span>● Medium</span></div>
+              </div>
+            </div>
+
+            <!-- Column 2: In Progress -->
+            <div class="kanban-col">
+              <div class="kanban-col-header">
+                <span style="color:var(--brand-primary)">⚡ IN PROGRESS (2)</span>
+                <span style="color:var(--brand-primary)">+</span>
+              </div>
+              <div class="kanban-card" data-task-id="k3">
+                <div class="kanban-card-title">Connect Google Gemini 3.6 Flash API</div>
+                <div class="kanban-card-sub"><span>AI Engine</span> <span style="color:var(--brand-emerald)">● Active</span></div>
+              </div>
+              <div class="kanban-card" data-task-id="k4">
+                <div class="kanban-card-title">Design Liquid Glass UI Component Kit</div>
+                <div class="kanban-card-sub"><span>Design System</span> <span>● In Review</span></div>
+              </div>
+            </div>
+
+            <!-- Column 3: Completed -->
+            <div class="kanban-col">
+              <div class="kanban-col-header">
+                <span style="color:var(--brand-emerald)">✅ COMPLETED (3)</span>
+                <span style="color:var(--brand-emerald)">✓</span>
+              </div>
+              <div class="kanban-card" data-task-id="k5">
+                <div class="kanban-card-title">SQLite Preference Persistence Database</div>
+                <div class="kanban-card-sub"><span style="color:var(--brand-emerald)">Completed</span> <span>100%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         7. AI WORKFLOW (LIVE GEMINI AI PROMPT CHIPS)
+         ========================================== -->
+    <section class="section" id="ai-engine">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">Live Gemini AI Engine</div>
+          <h2 class="section-title">Test TaskFlow <span class="gradient-text">AI Task Assistant</span></h2>
+          <p class="section-subtitle">Click a 1-click prompt chip or type your goal below to watch Google Gemini 3.6 Flash generate structured task deliverables.</p>
+        </div>
+
+        <div class="ai-workflow-card">
+          <!-- Preset AI Prompt Chips -->
+          <div class="chip-container">
+            <span style="font-size:0.85rem; font-weight:700; color:var(--text-muted); margin-right:0.25rem;">Try Preset:</span>
+            <button class="prompt-chip" data-prompt="Launch a new SaaS onboarding flow for engineering teams">🚀 Launch SaaS Onboarding</button>
+            <button class="prompt-chip" data-prompt="Perform security audit compliance checklist">🛡️ Security Audit Checklist</button>
+            <button class="prompt-chip" data-prompt="Design Liquid Glass UI Kit for mobile app release">🎨 Build Liquid Glass UI</button>
+            <button class="prompt-chip" data-prompt="Automate customer support ticket triage with Webhooks">🤖 Auto Support Triage</button>
+          </div>
+
+          <form id="aiTaskForm">
+            <div class="input-ai-task-box">
+              <input type="text" id="aiTaskInput" class="ai-input-field" placeholder="e.g. Launch a new SaaS onboarding flow for remote engineering teams..." required>
+              <button type="submit" class="btn btn-primary" id="aiTaskSubmitBtn">⚡ Generate AI Workflow</button>
+            </div>
+          </form>
+
+          <div class="ai-pipeline-output" id="aiPipelineTerminal">
+            <div style="color:var(--text-muted)">[TASKFLOW AI IDLE] Click a prompt chip above or type your goal to trigger live Google Gemini 3.6 Flash processing...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         8. ANALYTICS / ROI (INTERACTIVE LIQUID SLIDERS)
+         ========================================== -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">Proven Metrics & ROI</div>
+          <h2 class="section-title">Measurable Impact for <span class="gradient-text">High-Growth Teams</span></h2>
+          <p class="section-subtitle">Adjust the sliders below to see your team's live estimated cost reduction and hours saved with TaskFlow.</p>
+        </div>
+
+        <div class="analytics-grid">
+          <div class="metric-pill-card">
+            <div class="metric-number" id="roiAnnualVal">₹2,91,180</div>
+            <div class="metric-label">Estimated Annual Net Savings</div>
+          </div>
+
+          <div class="metric-pill-card">
+            <div class="metric-number">32%</div>
+            <div class="metric-label">Productivity Improvement</div>
+          </div>
+
+          <div class="metric-pill-card">
+            <div class="metric-number" id="roiHoursVal">6,000</div>
+            <div class="metric-label">Hours Saved / Year</div>
+          </div>
+
+          <div class="metric-pill-card">
+            <div class="metric-number">94%</div>
+            <div class="metric-label">Team Efficiency Score</div>
+          </div>
+        </div>
+
+        <!-- Interactive Liquid Slider Box -->
+        <div class="card" style="max-width:800px; margin:0 auto; padding:2rem;">
+          <div style="display:flex; flex-direction:column; gap:1.5rem;">
+            <div>
+              <div style="display:flex; justify-content:space-between; font-weight:700; font-size:0.95rem; margin-bottom:0.5rem;">
+                <span>👥 Team Size: <span id="sliderTeamText" style="color:var(--brand-primary)">15 Members</span></span>
+              </div>
+              <input type="range" id="roiSliderTeam" min="1" max="100" value="15" style="width:100%; accent-color:var(--brand-primary);">
+            </div>
+
+            <div>
+              <div style="display:flex; justify-content:space-between; font-weight:700; font-size:0.95rem; margin-bottom:0.5rem;">
+                <span>⏱️ Weekly Hours Saved / Person: <span id="sliderHoursText" style="color:var(--brand-primary)">8 hrs/wk</span></span>
+              </div>
+              <input type="range" id="roiSliderHours" min="2" max="25" value="8" style="width:100%; accent-color:var(--brand-primary);">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         9. TESTIMONIALS SECTION
+         ========================================== -->
+    <section class="section" id="resources">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">Sample Beta Feedback</div>
+          <h2 class="section-title">Loved by Teams at <span class="gradient-text">Every Scale</span></h2>
+          <p class="section-subtitle">Here is how modern startups and remote teams evaluate TaskFlow in early workflow trials.</p>
+        </div>
+
+        <div class="features-grid">
+          <div class="card">
+            <div style="color:#F59E0B; margin-bottom:0.85rem;">★★★★★</div>
+            <p style="font-style:italic; margin-bottom:1.5rem; color:var(--text-primary); font-size:1.025rem;">"TaskFlow unified sprint management for our team. The AI task breakdown alone saves our engineering leads 5 hours every sprint."</p>
+            <div style="display:flex; align-items:center; gap:0.85rem;">
+              <div style="width:44px; height:44px; border-radius:50%; background:var(--brand-primary); color:#FFF; display:flex; align-items:center; justify-content:center; font-weight:800;">SL</div>
+              <div>
+                <div style="font-weight:800; font-size:1rem;">Sarah Lin</div>
+                <div style="font-size:0.85rem; color:var(--text-muted)">Early Beta Tester • Product Lead</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="color:#F59E0B; margin-bottom:0.85rem;">★★★★★</div>
+            <p style="font-style:italic; margin-bottom:1.5rem; color:var(--text-primary); font-size:1.025rem;">"Managing remote projects used to be chaotic. TaskFlow gives us crystal clear visibility across all active projects and team deadlines."</p>
+            <div style="display:flex; align-items:center; gap:0.85rem;">
+              <div style="width:44px; height:44px; border-radius:50%; background:var(--brand-accent); color:#FFF; display:flex; align-items:center; justify-content:center; font-weight:800;">MV</div>
+              <div>
+                <div style="font-weight:800; font-size:1rem;">Marcus Vance</div>
+                <div style="font-size:0.85rem; color:var(--text-muted)">Early Beta Tester • Operations</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="color:#F59E0B; margin-bottom:0.85rem;">★★★★★</div>
+            <p style="font-style:italic; margin-bottom:1.5rem; color:var(--text-primary); font-size:1.025rem;">"The Liquid Glass interface is incredibly smooth, responsive, and easy to navigate. Onboarding our design team took less than an afternoon."</p>
+            <div style="display:flex; align-items:center; gap:0.85rem;">
+              <div style="width:44px; height:44px; border-radius:50%; background:var(--brand-emerald); color:#FFF; display:flex; align-items:center; justify-content:center; font-weight:800;">ER</div>
+              <div>
+                <div style="font-weight:800; font-size:1rem;">Elena Rostova</div>
+                <div style="font-size:0.85rem; color:var(--text-muted)">Early Beta Tester • Design Director</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         10. PRICING SECTION
+         ========================================== -->
+    <section class="section" id="pricing">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">Transparent Pricing</div>
+          <h2 class="section-title">Plans Built for <span class="gradient-text">Teams of All Sizes</span></h2>
+          <p class="section-subtitle">Start with zero credit card required. Upgrade whenever your business grows.</p>
+        </div>
+
+        <div class="pricing-toggle">
+          <span style="font-weight:700">Billed Monthly</span>
+          <div class="switch active" id="pricingSwitch" tabIndex="0" role="switch" aria-checked="true" aria-label="Toggle Annual Billing Discount">
+            <div class="switch-circle"></div>
+          </div>
+          <span style="font-weight:700">Billed Annually</span>
+          <span style="background:rgba(16,185,129,0.15); color:var(--brand-emerald); font-size:0.75rem; font-weight:800; padding:0.25rem 0.75rem; border-radius:var(--radius-pill);">SAVE 20%</span>
+        </div>
+
+        <div class="pricing-cards-grid">
+          <!-- Free Tier -->
+          <div class="card price-card">
+            <div>
+              <h3 style="font-size:1.35rem; font-weight:800;">Free</h3>
+              <p style="color:var(--text-muted); font-size:0.875rem;">For individuals and small side projects.</p>
+              <div class="price-amount">
+                <span id="priceFree">₹0</span>
+                <span class="price-period">/ month</span>
+              </div>
+              <div class="price-billing-tag" style="background:rgba(100,116,139,0.12); color:var(--text-muted); border-color:var(--border-liquid);">free forever</div>
+              <ul class="feature-check-list">
+                <li class="feature-check-item"><span style="color:var(--brand-emerald)">✓</span> Up to 5 Active Projects</li>
+                <li class="feature-check-item"><span style="color:var(--brand-emerald)">✓</span> Basic Task Boards & Lists</li>
+                <li class="feature-check-item"><span style="color:var(--brand-emerald)">✓</span> 100 MB Storage</li>
+                <li class="feature-check-item"><span style="color:var(--brand-emerald)">✓</span> Community Support</li>
+              </ul>
+            </div>
+            <button class="btn btn-outline btn-open-demo" data-tier="Free Plan" style="width:100%">Get Started Free</button>
+          </div>
+
+          <!-- Pro Tier (Popular) -->
+          <div class="card price-card popular">
+            <span class="badge-popular">MOST POPULAR</span>
+            <div>
+              <h3 style="font-size:1.35rem; font-weight:800; color:var(--brand-primary)">Pro</h3>
+              <p style="color:var(--text-muted); font-size:0.875rem;">For growing startups and professional teams.</p>
+              <div class="price-amount">
+                <span id="pricePro">₹399</span>
+                <span class="price-period">/ month</span>
+              </div>
+              <div class="price-billing-tag" id="unitPro">billed annually (SAVE 20%)</div>
+              <ul class="feature-check-list">
+                <li class="feature-check-item"><span style="color:var(--brand-emerald)">✓</span> Unlimited Projects & Tasks</li>
+                <li class="feature-check-item"><span style="color:var(--brand-emerald)">✓</span> AI Task Assistant & Workflows</li>
+                <li class="feature-check-item"><span style="color:var(--brand-emerald)">✓</span> 25 GB Storage & Attachments</li>
+                <li class="feature-check-item"><span style="color:var(--brand-emerald)">✓</span> Priority Email & Chat Support</li>
+              </ul>
+            </div>
+            <button class="btn btn-primary btn-open-demo" data-tier="Pro Plan Trial" style="width:100%">Start Pro Trial</button>
+          </div>
+
+          <!-- Business Tier -->
+          <div class="card price-card">
+            <div>
+              <h3 style="font-size:1.35rem; font-weight:800;">Business</h3>
+              <p style="color:var(--text-muted); font-size:0.875rem;">For scaling organizations needing enterprise control.</p>
+              <div class="price-amount">
+                <span id="priceBusiness">₹799</span>
+                <span class="price-period">/ month</span>
+              </div>
+              <div class="price-billing-tag" id="unitBusiness">billed annually (SAVE 20%)</div>
+              <ul class="feature-check-list">
+                <li class="feature-check-item"><span style="color:var(--brand-emerald)">✓</span> Everything in Pro</li>
+                <li class="feature-check-item"><span style="color:var(--brand-emerald)">✓</span> Advanced Analytics & Custom Reports</li>
+                <li class="feature-check-item"><span style="color:var(--brand-emerald)">✓</span> Dedicated Success Manager</li>
+                <li class="feature-check-item"><span style="color:var(--brand-emerald)">✓</span> 99.9% Uptime SLA Guarantee</li>
+              </ul>
+            </div>
+            <button class="btn btn-outline btn-scroll-contact" style="width:100%">Contact Sales</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         11. FAQ ACCORDION SECTION (ACCESSIBLE BUTTONS)
+         ========================================== -->
+    <section class="section" id="about">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">Got Questions?</div>
+          <h2 class="section-title">Frequently Asked <span class="gradient-text">Questions</span></h2>
+          <p class="section-subtitle">Here are answers to the most common questions about TaskFlow.</p>
+        </div>
+
+        <div class="faq-container">
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false" aria-controls="faq-ans-1">
+              <span>What is TaskFlow?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer" id="faq-ans-1">
+              TaskFlow is an all-in-one AI-powered productivity and team collaboration platform that brings tasks, projects, teams, and automated workflows into a single unified Liquid Glass workspace.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false" aria-controls="faq-ans-2">
+              <span>Is there a free plan?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer" id="faq-ans-2">
+              Yes! TaskFlow offers a 100% free plan for up to 5 active projects with basic task management features, perfect for individuals and small side projects.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false" aria-controls="faq-ans-3">
+              <span>Can I invite my team?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer" id="faq-ans-3">
+              Absolutely. You can invite team members via email links, assign roles (Admin, Member, Guest), and manage granular permissions per project workspace.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false" aria-controls="faq-ans-4">
+              <span>Does TaskFlow support AI workflows?</span>
+              <span class="faq-icon">+</span>
+            </div>
+            <div class="faq-answer" id="faq-ans-4">
+              Yes, TaskFlow features a built-in AI Task Assistant powered by Google Gemini 3.6 Flash that breaks down project goals into actionable tasks, sets priorities, and automates status updates.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false" aria-controls="faq-ans-5">
+              <span>Can I cancel anytime?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer" id="faq-ans-5">
+              Yes, you can upgrade, downgrade, or cancel your subscription at any time directly from your billing settings with zero cancellation fees.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false" aria-controls="faq-ans-6">
+              <span>Is my data secure?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer" id="faq-ans-6">
+              Security is built into our core architecture. TaskFlow is designed with secure development practices and supports encrypted HTTPS/TLS connections in production.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         12. CONTACT SALES / REQUEST A DEMO SECTION
+         ========================================== -->
+    <section class="section" id="contact">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">Talk to Sales & Engineering</div>
+          <h2 class="section-title">Request a Demo or <span class="gradient-text">Contact Sales</span></h2>
+          <p class="section-subtitle">Have questions about enterprise deployments, custom AI workflows, or team pricing? Fill out the form below and an advisor will reach out.</p>
+        </div>
+
+        <div class="contact-card-wrapper">
+          <form id="contactSalesForm">
+            <div class="form-group-grid">
+              <div class="form-field-group">
+                <label for="contactName" class="form-input-label">Full Name <span style="color:var(--brand-rose)">*</span></label>
+                <input type="text" id="contactName" class="form-input-field" placeholder="e.g. Alex Johnson" required>
+              </div>
+
+              <div class="form-field-group">
+                <label for="contactEmail" class="form-input-label">Work Email <span style="color:var(--brand-rose)">*</span></label>
+                <input type="email" id="contactEmail" class="form-input-field" placeholder="alex@company.com" required>
+              </div>
+
+              <div class="form-field-group">
+                <label for="contactCompany" class="form-input-label">Company Name</label>
+                <input type="text" id="contactCompany" class="form-input-field" placeholder="Acme SaaS Inc.">
+              </div>
+
+              <div class="form-field-group">
+                <label for="contactSource" class="form-input-label">Inquiry Type</label>
+                <select id="contactSource" class="form-input-field" style="cursor:pointer;">
+                  <option value="contact_sales">Contact Sales Team</option>
+                  <option value="request_demo">Request Product Demo</option>
+                  <option value="enterprise_pricing">Enterprise Custom Quote</option>
+                </select>
+              </div>
+
+              <div class="form-field-group full-width">
+                <label for="contactMessage" class="form-input-label">How can we help your team? <span style="color:var(--brand-rose)">*</span></label>
+                <textarea id="contactMessage" class="form-textarea-field" placeholder="Tell us about your team size, workflow requirements, or compliance questions..." required></textarea>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="contactSubmitBtn" style="width:100%; padding:1rem; font-size:1.05rem;">
+              🚀 Submit Inquiry to Sales
+            </button>
+          </form>
+
+          <div class="form-success-box" id="contactSuccessState">
+            ✨ Thank you! Your inquiry has been dispatched to our sales team. We will contact you within 24 business hours.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         13. FINAL CTA
+         ========================================== -->
+    <section class="container">
+      <div class="final-cta-section">
+        <h2>Ready to work smarter?</h2>
+        <p>Bring your team, projects, and productivity together with TaskFlow.</p>
+        <button class="btn btn-primary btn-open-demo" data-tier="Free Trial" style="background:#FFFFFF; color:var(--brand-primary); font-size:1.1rem; padding:1rem 2.25rem;">Start Free Today</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==========================================
+       FLOATING LIQUID GLASS QUICK ACTION PILL BAR (WITH MINIMIZE TOGGLE)
+       ========================================== -->
+  <div class="liquid-floating-bar" id="liquidFloatingBar">
+    <div class="bar-content-group" id="barContentGroup" style="display:flex; align-items:center; gap:0.85rem;">
+      <button class="liquid-bar-item" id="toggleFocusModeBtn" title="Toggle Focus Mode">
+        <span>🎯</span> Focus Mode
+      </button>
+      <button class="liquid-bar-item" id="openAiModalBtn" title="Open AI Prompt Modal">
+        <span>⚡</span> AI Prompt
+      </button>
+      <button class="liquid-bar-item" id="toggleSoundBtn" title="Toggle Sound Feedback">
+        <span id="soundIcon">🔊</span> Audio FX
+      </button>
+      <div style="height:16px; width:1px; background:var(--border-liquid);"></div>
+      <div class="gemini-status-indicator" style="display:flex; align-items:center; gap:0.4rem; font-size:0.8rem; font-weight:700; color:var(--brand-emerald);">
+        <span style="width:8px; height:8px; border-radius:50%; background:var(--brand-emerald); box-shadow:0 0 8px var(--brand-emerald);"></span>
+        <span>AI Engine Connected</span>
+      </div>
+    </div>
+    <button class="bar-collapse-btn" id="collapseBarBtn" title="Minimize/Maximize Dock">✕</button>
+  </div>
+
+  <!-- ==========================================
+       LIQUID GLASS AI PROMPT QUICK MODAL
+       ========================================== -->
+  <div class="glass-modal-overlay" id="aiPromptModalOverlay">
+    <div class="glass-modal-content">
+      <button class="glass-modal-close" id="closeAiModalBtn">✕</button>
+      <div style="display:flex; align-items:center; gap:0.65rem; margin-bottom:1rem;">
+        <div style="width:40px; height:40px; border-radius:50%; background:var(--gradient-brand); display:flex; align-items:center; justify-content:center; color:#FFF; font-size:1.2rem;">🧠</div>
+        <div>
+          <h3 style="font-size:1.35rem; font-weight:800;">Google Gemini 3.6 AI Assistant</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted)">Type any project brief to generate structured deliverables live.</p>
+        </div>
+      </div>
+
+      <div class="chip-container" style="margin-bottom:1.25rem;">
+        <button class="prompt-chip modal-chip" data-prompt="Design a Liquid Glass component library for React & Vue">🎨 Design Glass UI Kit</button>
+        <button class="prompt-chip modal-chip" data-prompt="Build backend API endpoints for real-time team task sync">⚙️ Build REST API</button>
+        <button class="prompt-chip modal-chip" data-prompt="Create automated customer onboarding email drip campaign">✉️ Onboarding Campaign</button>
+      </div>
+
+      <form id="modalAiForm">
+        <div class="input-ai-task-box" style="margin-bottom:1rem;">
+          <input type="text" id="modalAiInput" class="ai-input-field" placeholder="Ask Gemini 3.6 Flash to organize your sprint tasks..." required style="flex:1;">
+          <button type="submit" class="btn btn-primary" id="modalAiSubmitBtn">⚡ Generate</button>
+        </div>
+      </form>
+
+      <div class="ai-pipeline-output" id="modalAiTerminal" style="max-height:180px; overflow-y:auto; background:var(--bg-body); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-liquid); font-size:0.85rem;">
+        <div style="color:var(--text-muted)">[GEMINI 3.6 READY] Type a prompt or click a chip to query the live API backend...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       LIQUID GLASS GET STARTED DEMO MODAL
+       ========================================== -->
+  <div class="glass-modal-overlay" id="getStartedModal">
+    <div class="glass-modal-content">
+      <button class="glass-modal-close" id="closeGetStartedBtn">✕</button>
+      <div style="display:flex; align-items:center; gap:0.65rem; margin-bottom:1.25rem;">
+        <div style="width:40px; height:40px; border-radius:50%; background:var(--gradient-brand); display:flex; align-items:center; justify-content:center; color:#FFF; font-size:1.2rem;">💧</div>
+        <div>
+          <h3 style="font-size:1.35rem; font-weight:800;">Request TaskFlow Demo Workspace</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted)">Interactive Demo Setup • No Credit Card Required</p>
+        </div>
+      </div>
+
+      <form id="demoSignupForm">
+        <div style="display:flex; flex-direction:column; gap:1rem; margin-bottom:1.25rem;">
+          <div>
+            <label for="demoName" class="form-input-label">Full Name <span style="color:var(--brand-rose)">*</span></label>
+            <input type="text" id="demoName" class="form-input-field" placeholder="e.g. Sarah Lin" required>
+          </div>
+
+          <div>
+            <label for="demoEmail" class="form-input-label">Work Email <span style="color:var(--brand-rose)">*</span></label>
+            <input type="email" id="demoEmail" class="form-input-field" placeholder="sarah@company.com" required>
+          </div>
+
+          <div>
+            <label for="demoCompany" class="form-input-label">Company / Workspace Name</label>
+            <input type="text" id="demoCompany" class="form-input-field" placeholder="Acme Product Lab">
+          </div>
+
+          <div>
+            <label for="demoTeamSize" class="form-input-label">Estimated Team Size</label>
+            <select id="demoTeamSize" class="form-input-field" style="cursor:pointer;">
+              <option value="1-5">1 - 5 Members (Small Team)</option>
+              <option value="6-20" selected>6 - 20 Members (Growing Startup)</option>
+              <option value="21-100">21 - 100 Members (Mid-Market)</option>
+              <option value="100+">100+ Members (Enterprise)</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="demoSubmitBtn" style="width:100%; padding:0.9rem;">
+          ⚡ Request Demo Workspace
+        </button>
+      </form>
+
+      <div class="form-success-box" id="demoSuccessState">
+        🎉 Success! Your demo workspace setup request has been recorded. Our team will reach out with login instructions.
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       13. FOOTER
+       ========================================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a href="#" class="brand-logo">
+            <div class="logo-symbol">💧</div>
+            <span>TaskFlow</span>
+          </a>
+          <p class="footer-desc">
+            TaskFlow is a modern AI-powered productivity and team collaboration platform that helps teams manage projects, tasks, workflows, and productivity from one place.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Product</h4>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="#features">AI Task Assistant</a></li>
+            <li class="footer-link-item"><a href="#product">Project Management</a></li>
+            <li class="footer-link-item"><a href="#pricing">Pricing Plans</a></li>
+            <li class="footer-link-item"><a href="#ai-engine">AI Engine</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Company</h4>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="#about">About TaskFlow</a></li>
+            <li class="footer-link-item"><a href="#resources">Customer Reviews</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Resources</h4>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="#about">FAQ</a></li>
+            <li class="footer-link-item"><a href="#">System Status</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom-bar">
+        <div>© 2026 TaskFlow, Inc. All rights reserved.</div>
+        <div style="display:flex; gap:1.5rem;">
+          <a href="#" style="color:var(--text-muted); text-decoration:none;">Privacy Policy</a>
+          <a href="#" style="color:var(--text-muted); text-decoration:none;">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/dashboard-chart.js"></script>
+  <script src="js/workflow-builder.js"></script>
+  <script src="js/roi-calculator.js"></script>
+  <script src="js/sample-modal.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
