@@ -123,7 +123,24 @@
 
       <div class="nav-actions">
         <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle Theme Mode" title="Toggle Theme">🌙</button>
-        <a href="#pricing" class="btn btn-primary" id="getStartedBtn">Get Started</a>
+        <div id="loggedOutNavGroup" class="nav-auth-group" style="display:flex; align-items:center; gap:0.65rem;">
+          <button class="btn btn-outline" id="navLoginBtn">Login</button>
+          <button class="btn btn-primary" id="getStartedBtn">Get Started</button>
+        </div>
+        <div id="loggedInNavGroup" class="nav-auth-group user-nav-dropdown" style="display:none;">
+          <a href="#dashboard" class="btn btn-secondary" id="navDashboardBtn" style="padding:0.6rem 1.1rem; font-size:0.875rem;">Dashboard</a>
+          <button type="button" class="user-profile-menu-btn" id="userProfileMenuBtn" aria-expanded="false" aria-label="User profile menu">
+            <div class="user-avatar" id="userNavAvatar">U</div>
+            <span class="user-nav-name" id="userNavName">User</span>
+            <span style="font-size:0.75rem;">▾</span>
+          </button>
+          <div class="user-dropdown-menu" id="userDropdownMenu">
+            <a href="#dashboard" class="user-menu-item" id="userMenuDashboard">📊 Dashboard</a>
+            <a href="#about" class="user-menu-item" id="userMenuProfile">👤 Profile & Settings</a>
+            <div class="menu-divider"></div>
+            <button type="button" class="user-menu-item logout-btn" id="userMenuLogout">🚪 Logout</button>
+          </div>
+        </div>
         <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">☰</button>
       </div>
     </div>
@@ -640,7 +657,7 @@
             <button class="faq-question" aria-expanded="false" aria-controls="faq-ans-4">
               <span>Does TaskFlow support AI workflows?</span>
               <span class="faq-icon">+</span>
-            </div>
+            </button>
             <div class="faq-answer" id="faq-ans-4">
               Yes, TaskFlow features a built-in AI Task Assistant powered by Google Gemini 3.6 Flash that breaks down project goals into actionable tasks, sets priorities, and automates status updates.
             </div>
@@ -843,6 +860,212 @@
       <div class="form-success-box" id="demoSuccessState">
         🎉 Success! Your demo workspace setup request has been recorded. Our team will reach out with login instructions.
       </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       SIGN UP MODAL
+       ========================================== -->
+  <div class="glass-modal-overlay" id="signupModal" role="dialog" aria-modal="true" aria-labelledby="signupTitle">
+    <div class="glass-modal-content auth-modal-card">
+      <button class="glass-modal-close" id="closeSignupBtn" aria-label="Close modal">✕</button>
+
+      <div class="auth-header">
+        <div class="logo-symbol" style="margin: 0 auto 0.75rem auto;">💧</div>
+        <h3 id="signupTitle" class="auth-title">Create your TaskFlow account</h3>
+        <p class="auth-subtitle">Join thousands of teams working smarter with AI workflows</p>
+      </div>
+
+      <div id="signupAlert" class="auth-alert" style="display:none;"></div>
+
+      <a href="/api/auth/google" class="btn btn-google">
+        <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span>Continue with Google</span>
+      </a>
+
+      <div class="auth-divider">
+        <span>OR</span>
+      </div>
+
+      <form id="signupForm" class="auth-form" novalidate>
+        <div class="form-field-group">
+          <label for="signupName" class="form-input-label">Full Name <span class="required-star">*</span></label>
+          <input type="text" id="signupName" class="form-input-field" placeholder="e.g. Alex Morgan" required autocomplete="name">
+        </div>
+
+        <div class="form-field-group">
+          <label for="signupEmail" class="form-input-label">Work Email <span class="required-star">*</span></label>
+          <input type="email" id="signupEmail" class="form-input-field" placeholder="alex@company.com" required autocomplete="email">
+        </div>
+
+        <div class="form-field-group">
+          <label for="signupCompany" class="form-input-label">Company <span class="optional-tag">(optional)</span></label>
+          <input type="text" id="signupCompany" class="form-input-field" placeholder="Acme Inc." autocomplete="organization">
+        </div>
+
+        <div class="form-field-group">
+          <label for="signupPassword" class="form-input-label">Password <span class="required-star">*</span></label>
+          <div class="password-input-wrapper">
+            <input type="password" id="signupPassword" class="form-input-field" placeholder="At least 8 characters" required minlength="8" autocomplete="new-password">
+            <button type="button" class="password-toggle-btn" data-target="signupPassword" aria-label="Toggle password visibility">👁️</button>
+          </div>
+        </div>
+
+        <div class="form-field-group">
+          <label for="signupConfirmPassword" class="form-input-label">Confirm Password <span class="required-star">*</span></label>
+          <div class="password-input-wrapper">
+            <input type="password" id="signupConfirmPassword" class="form-input-field" placeholder="Confirm your password" required autocomplete="new-password">
+            <button type="button" class="password-toggle-btn" data-target="signupConfirmPassword" aria-label="Toggle password visibility">👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary auth-submit-btn" id="signupSubmitBtn">
+          <span class="btn-text">Create Account</span>
+          <span class="btn-spinner" style="display:none;">⏳ Creating account...</span>
+        </button>
+      </form>
+
+      <div class="auth-footer-link">
+        Already have an account? <button type="button" class="auth-switch-btn" id="switchToLoginBtn">Login</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       LOGIN MODAL
+       ========================================== -->
+  <div class="glass-modal-overlay" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <div class="glass-modal-content auth-modal-card">
+      <button class="glass-modal-close" id="closeLoginBtn" aria-label="Close modal">✕</button>
+
+      <div class="auth-header">
+        <div class="logo-symbol" style="margin: 0 auto 0.75rem auto;">💧</div>
+        <h3 id="loginTitle" class="auth-title">Welcome back 👋</h3>
+        <p class="auth-subtitle">Sign in to your TaskFlow workspace</p>
+      </div>
+
+      <div id="loginAlert" class="auth-alert" style="display:none;"></div>
+
+      <a href="/api/auth/google" class="btn btn-google">
+        <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span>Continue with Google</span>
+      </a>
+
+      <div class="auth-divider">
+        <span>OR</span>
+      </div>
+
+      <form id="loginForm" class="auth-form" novalidate>
+        <div class="form-field-group">
+          <label for="loginEmail" class="form-input-label">Work Email <span class="required-star">*</span></label>
+          <input type="email" id="loginEmail" class="form-input-field" placeholder="alex@company.com" required autocomplete="email">
+        </div>
+
+        <div class="form-field-group">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label for="loginPassword" class="form-input-label">Password <span class="required-star">*</span></label>
+            <button type="button" class="forgot-password-btn" id="forgotPasswordBtn">Forgot password?</button>
+          </div>
+          <div class="password-input-wrapper">
+            <input type="password" id="loginPassword" class="form-input-field" placeholder="Your password" required autocomplete="current-password">
+            <button type="button" class="password-toggle-btn" data-target="loginPassword" aria-label="Toggle password visibility">👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary auth-submit-btn" id="loginSubmitBtn">
+          <span class="btn-text">Login</span>
+          <span class="btn-spinner" style="display:none;">⏳ Authenticating...</span>
+        </button>
+      </form>
+
+      <div class="auth-footer-link">
+        Don't have an account? <button type="button" class="auth-switch-btn" id="switchToSignupBtn">Sign Up</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       FORGOT PASSWORD MODAL
+       ========================================== -->
+  <div class="glass-modal-overlay" id="forgotPasswordModal" role="dialog" aria-modal="true" aria-labelledby="forgotTitle">
+    <div class="glass-modal-content auth-modal-card">
+      <button class="glass-modal-close" id="closeForgotBtn" aria-label="Close modal">✕</button>
+
+      <div class="auth-header">
+        <div class="logo-symbol" style="margin: 0 auto 0.75rem auto;">💧</div>
+        <h3 id="forgotTitle" class="auth-title">Reset your password</h3>
+        <p class="auth-subtitle">Enter your work email address to receive password reset instructions</p>
+      </div>
+
+      <div id="forgotAlert" class="auth-alert" style="display:none;"></div>
+
+      <form id="forgotPasswordForm" class="auth-form" novalidate>
+        <div class="form-field-group">
+          <label for="forgotEmail" class="form-input-label">Work Email <span class="required-star">*</span></label>
+          <input type="email" id="forgotEmail" class="form-input-field" placeholder="alex@company.com" required autocomplete="email">
+        </div>
+
+        <button type="submit" class="btn btn-primary auth-submit-btn" id="forgotSubmitBtn">
+          <span class="btn-text">Send Reset Instructions</span>
+          <span class="btn-spinner" style="display:none;">⏳ Sending link...</span>
+        </button>
+      </form>
+
+      <div class="auth-footer-link">
+        Remember your password? <button type="button" class="auth-switch-btn" id="switchToLoginFromForgotBtn">Login</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       RESET PASSWORD MODAL (Triggered via ?reset_token=...)
+       ========================================== -->
+  <div class="glass-modal-overlay" id="resetPasswordModal" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
+    <div class="glass-modal-content auth-modal-card">
+      <button class="glass-modal-close" id="closeResetBtn" aria-label="Close modal">✕</button>
+
+      <div class="auth-header">
+        <div class="logo-symbol" style="margin: 0 auto 0.75rem auto;">💧</div>
+        <h3 id="resetTitle" class="auth-title">Set new password</h3>
+        <p class="auth-subtitle">Choose a strong new password for your TaskFlow account</p>
+      </div>
+
+      <div id="resetAlert" class="auth-alert" style="display:none;"></div>
+
+      <form id="resetPasswordForm" class="auth-form" novalidate>
+        <input type="hidden" id="resetTokenInput">
+
+        <div class="form-field-group">
+          <label for="newPasswordInput" class="form-input-label">New Password <span class="required-star">*</span></label>
+          <div class="password-input-wrapper">
+            <input type="password" id="newPasswordInput" class="form-input-field" placeholder="At least 8 characters" required minlength="8" autocomplete="new-password">
+            <button type="button" class="password-toggle-btn" data-target="newPasswordInput" aria-label="Toggle password visibility">👁️</button>
+          </div>
+        </div>
+
+        <div class="form-field-group">
+          <label for="confirmNewPasswordInput" class="form-input-label">Confirm New Password <span class="required-star">*</span></label>
+          <div class="password-input-wrapper">
+            <input type="password" id="confirmNewPasswordInput" class="form-input-field" placeholder="Confirm new password" required autocomplete="new-password">
+            <button type="button" class="password-toggle-btn" data-target="confirmNewPasswordInput" aria-label="Toggle password visibility">👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary auth-submit-btn" id="resetSubmitBtn">
+          <span class="btn-text">Update Password</span>
+          <span class="btn-spinner" style="display:none;">⏳ Updating password...</span>
+        </button>
+      </form>
     </div>
   </div>
 

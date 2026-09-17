@@ -12,6 +12,8 @@ class DashboardChart {
     
     this.resize();
     window.addEventListener('resize', () => this.resize());
+    window.addEventListener('load', () => this.resize());
+    setTimeout(() => this.resize(), 150);
     
     // Periodically update last data point to simulate real-time live activity
     setInterval(() => this.simulateLivePulse(), 2500);
@@ -21,11 +23,22 @@ class DashboardChart {
   resize() {
     if (!this.canvas) return;
     const rect = this.canvas.getBoundingClientRect();
-    this.canvas.width = rect.width * (window.devicePixelRatio || 1);
-    this.canvas.height = rect.height * (window.devicePixelRatio || 1);
-    this.ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
-    this.width = rect.width;
-    this.height = rect.height;
+    const dpr = window.devicePixelRatio || 1;
+    const width = rect.width > 0 ? rect.width : (this.canvas.parentElement ? this.canvas.parentElement.clientWidth - 40 : 600);
+    const height = rect.height > 0 ? rect.height : 150;
+
+    this.canvas.width = width * dpr;
+    this.canvas.height = height * dpr;
+    
+    if (this.ctx.resetTransform) {
+      this.ctx.resetTransform();
+    } else {
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    this.ctx.scale(dpr, dpr);
+
+    this.width = width;
+    this.height = height;
     this.render();
   }
 

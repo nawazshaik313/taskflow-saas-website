@@ -15,8 +15,15 @@ import os
 import time
 import random
 import urllib.request
+import urllib.parse
 import urllib.error
-from datetime import datetime
+import hashlib
+import secrets
+import re
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime, timedelta, timezone
 from urllib.parse import parse_qs, urlparse
 
 PORT = int(os.environ.get("PORT", "8080"))
@@ -38,6 +45,155 @@ def load_env():
                         os.environ[k.strip()] = v.strip().strip('"').strip("'")
 
 load_env()
+
+SESSION_SECRET = os.environ.get("SESSION_SECRET", "")
+if not SESSION_SECRET:
+    SESSION_SECRET = secrets.token_hex(32)
+
+def get_google_config():
+    load_env()
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+    client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
+    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", f"http://localhost:{PORT}/api/auth/google/callback").strip()
+    return client_id, client_secret, redirect_uri
+
+def get_smtp_config():
+    load_env()
+    host = os.environ.get("SMTP_HOST", "").strip()
+    port = int(os.environ.get("SMTP_PORT", "587"))
+    user = os.environ.get("SMTP_USER", "").strip()
+    password = os.environ.get("SMTP_PASSWORD", "").strip()
+    from_email = os.environ.get("SMTP_FROM_EMAIL", user or "noreply@taskflow.io").strip()
+    use_tls = os.environ.get("SMTP_USE_TLS", "true").lower() in ["true", "1", "yes"]
+    return host, port, user, password, from_email, use_tls
+
+def send_password_reset_email(to_email, reset_url):
+    host, port, user, password, from_email, use_tls = get_smtp_config()
+    if not host or not user or not password:
+        return False, "SMTP email server credentials are not configured in environment variables."
+    
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = "TaskFlow - Reset Your Password"
+        msg['From'] = f"TaskFlow Security <{from_email}>"
+        msg['To'] = to_email
+
+        text_content = f"Hello,\n\nYou requested a password reset for your TaskFlow workspace account.\nClick the link below to set a new password:\n{reset_url}\n\nThis link will expire in 1 hour.\nIf you did not request this reset, please ignore this email.\n\nThe TaskFlow Team"
+        
+        html_content = f"""
+        <div style="font-family:'Plus Jakarta Sans', Arial, sans-serif; max-width:560px; margin:0 auto; padding:2rem; background:#F4F6FB; border-radius:16px; color:#0F172A;">
+          <div style="text-align:center; margin-bottom:1.5rem;">
+            <div style="width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg, #4F46E5, #06B6D4); display:inline-flex; align-items:center; justify-content:center; color:#FFF; font-size:1.5rem;">💧</div>
+            <h2 style="margin-top:0.75rem; font-size:1.5rem; font-weight:800; color:#0F172A;">Reset Your Password</h2>
+          </div>
+          <p style="font-size:1rem; color:#334155; line-height:1.6;">Hello,</p>
+          <p style="font-size:1rem; color:#334155; line-height:1.6;">You recently requested to reset the password for your TaskFlow account. Click the button below to choose a new password:</p>
+          <div style="text-align:center; margin:2rem 0;">
+            <a href="{reset_url}" style="background:linear-gradient(135deg, #4F46E5, #06B6D4); color:#FFFFFF; text-decoration:none; padding:0.85rem 2rem; border-radius:9999px; font-weight:700; display:inline-block; font-size:1rem;">Reset Password</a>
+          </div>
+          <p style="font-size:0.875rem; color:#64748B;">This link is valid for 1 hour. If you did not request a password reset, no action is needed.</p>
+          <hr style="border:none; border-top:1px solid rgba(0,0,0,0.1); margin:1.5rem 0;">
+          <p style="font-size:0.75rem; color:#94A3B8; text-align:center;">TaskFlow Inc. • Work smarter. Get more done.</p>
+        </div>
+        """
+
+        msg.attach(MIMEText(text_content, 'plain'))
+        msg.attach(MIMEText(html_content, 'html'))
+
+        if use_tls:
+            server = smtplib.SMTP(host, port, timeout=10)
+            server.starttls()
+        else:
+            server = smtplib.SMTP(host, port, timeout=10)
+
+        server.login(user, password)
+        server.sendmail(from_email, [to_email], msg.as_string())
+        server.quit()
+        return True, "Email sent successfully"
+    except Exception as e:
+        print(f"[SMTP RESET EMAIL ERROR] {e}")
+        return False, str(e)
+
+AUTH_ATTEMPTS = {} # Rate limiting dict: { ip: [timestamp1, ...] }
+
+def is_rate_limited(client_ip: str, limit: int = 5, window_seconds: int = 60) -> bool:
+    now = time.time()
+    attempts = [t for t in AUTH_ATTEMPTS.get(client_ip, []) if now - t < window_seconds]
+    AUTH_ATTEMPTS[client_ip] = attempts
+    if len(attempts) >= limit:
+        return True
+    AUTH_ATTEMPTS[client_ip].append(now)
+    return False
+
+def hash_password(password: str) -> str:
+    salt = secrets.token_hex(16)
+    pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000).hex()
+    return f"{salt}${pwd_hash}"
+
+def verify_password(password: str, stored_hash: str) -> bool:
+    if not stored_hash or '$' not in stored_hash:
+        return False
+    try:
+        salt, expected_hash = stored_hash.split('$', 1)
+        actual_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000).hex()
+        return secrets.compare_digest(actual_hash, expected_hash)
+    except Exception:
+        return False
+
+def parse_cookies(cookie_header: str):
+    cookies = {}
+    if not cookie_header:
+        return cookies
+    items = cookie_header.split(";")
+    for item in items:
+        if "=" in item:
+            k, v = item.strip().split("=", 1)
+            cookies[k.strip()] = v.strip()
+    return cookies
+
+def get_session_user(handler):
+    cookie_hdr = handler.headers.get('Cookie', '')
+    cookies = parse_cookies(cookie_hdr)
+    token = cookies.get('taskflow_session')
+    if not token:
+        return None
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    now_str = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+    cursor.execute("""
+        SELECT u.id, u.name, u.email, u.company, u.avatar_url, u.auth_provider, u.created_at
+        FROM sessions s
+        JOIN users u ON s.user_id = u.id
+        WHERE s.session_token = ? AND s.expires_at > ?
+    """, (token, now_str))
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "id": row[0],
+        "name": row[1],
+        "email": row[2],
+        "company": row[3],
+        "avatar_url": row[4],
+        "auth_provider": row[5],
+        "created_at": row[6]
+    }
+
+def set_session_cookie(handler, session_token: str, max_age_seconds: int = 604800):
+    cookie_val = f"taskflow_session={session_token}; Path=/; HttpOnly; SameSite=Lax; Max-Age={max_age_seconds}"
+    if not hasattr(handler, 'extra_headers'):
+        handler.extra_headers = []
+    handler.extra_headers.append(('Set-Cookie', cookie_val))
+
+def clear_session_cookie(handler):
+    cookie_val = "taskflow_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"
+    if not hasattr(handler, 'extra_headers'):
+        handler.extra_headers = []
+    handler.extra_headers.append(('Set-Cookie', cookie_val))
 
 # --- Database Initialization ---
 def init_db():
@@ -107,6 +263,61 @@ def init_db():
         INSERT OR IGNORE INTO user_preferences (id, user_session, theme_mode)
         VALUES (1, 'default_user', 'light')
     """)
+
+    # 5. Users Table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            company TEXT,
+            password_hash TEXT,
+            google_id TEXT UNIQUE,
+            avatar_url TEXT,
+            auth_provider TEXT DEFAULT 'email',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_login_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id)")
+
+    # 6. Sessions Table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_token TEXT UNIQUE NOT NULL,
+            user_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(session_token)")
+
+    # 7. Password Resets Table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            token_hash TEXT UNIQUE NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            used INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_pwd_reset_token ON password_resets(token_hash)")
+
+    # Migration for leads table user_id association
+    cursor.execute("PRAGMA table_info(leads)")
+    existing_lead_cols = [row[1] for row in cursor.fetchall()]
+    if "user_id" not in existing_lead_cols:
+        try:
+            cursor.execute("ALTER TABLE leads ADD COLUMN user_id INTEGER REFERENCES users(id)")
+        except Exception:
+            pass
 
     conn.commit()
     conn.close()
@@ -192,10 +403,18 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_health()
         elif path == "/api/dashboard/stats":
             self.handle_dashboard_stats()
+        elif path == "/api/dashboard/data":
+            self.handle_protected_dashboard_data()
         elif path == "/api/user/preferences":
             self.handle_get_preferences()
         elif path == "/api/navigation/menu":
             self.handle_navigation_menu()
+        elif path == "/api/auth/me":
+            self.handle_auth_me()
+        elif path == "/api/auth/google":
+            self.handle_auth_google()
+        elif path == "/api/auth/google/callback":
+            self.handle_auth_google_callback()
         else:
             super().do_GET()
 
@@ -211,7 +430,17 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
         except Exception:
             data = {}
 
-        if path == "/api/user/preferences":
+        if path == "/api/auth/signup":
+            self.handle_auth_signup(data)
+        elif path == "/api/auth/login":
+            self.handle_auth_login(data)
+        elif path == "/api/auth/logout":
+            self.handle_auth_logout()
+        elif path == "/api/auth/forgot-password":
+            self.handle_auth_forgot_password(data)
+        elif path == "/api/auth/reset-password":
+            self.handle_auth_reset_password(data)
+        elif path == "/api/user/preferences":
             self.handle_update_preferences(data)
         elif path == "/api/tasks/analyze":
             self.handle_task_analyze(data)
@@ -227,8 +456,21 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
     def send_json(self, payload, status=200):
         self.send_response(status)
         self.send_header('Content-Type', 'application/json')
+        if hasattr(self, 'extra_headers'):
+            for k, v in self.extra_headers:
+                self.send_header(k, v)
+            self.extra_headers = []
         self.end_headers()
         self.wfile.write(json.dumps(payload).encode('utf-8'))
+
+    def send_redirect(self, location, status=302):
+        self.send_response(status)
+        self.send_header('Location', location)
+        if hasattr(self, 'extra_headers'):
+            for k, v in self.extra_headers:
+                self.send_header(k, v)
+            self.extra_headers = []
+        self.end_headers()
 
     def handle_health(self):
         uptime = round(time.time() - START_TIME, 2)
@@ -244,7 +486,7 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
             "ai_status_text": status_text,
             "configured_model": "gemini-3.6-flash",
             "uptime_seconds": uptime,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z"
         })
 
     def handle_get_preferences(self):
@@ -444,6 +686,410 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
             }
         })
 
+    def get_client_ip(self):
+        forwarded = self.headers.get('X-Forwarded-For')
+        if forwarded:
+            return forwarded.split(',')[0].strip()
+        return self.client_address[0]
+
+    def handle_auth_signup(self, data):
+        client_ip = self.get_client_ip()
+        if is_rate_limited(client_ip, limit=5, window_seconds=60):
+            self.send_json({"success": False, "error": "Too many requests. Please wait a minute before trying again."}, status=429)
+            return
+
+        name = data.get("name", "").strip()
+        email = data.get("email", "").strip().lower()
+        company = data.get("company", "").strip()
+        password = data.get("password", "")
+        confirm_password = data.get("confirm_password", "")
+
+        if not name:
+            self.send_json({"success": False, "error": "Full name is required."}, status=400)
+            return
+
+        email_regex = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+        if not email or not re.match(email_regex, email):
+            self.send_json({"success": False, "error": "Please provide a valid work email address."}, status=400)
+            return
+
+        if len(password) < 8:
+            self.send_json({"success": False, "error": "Password must be at least 8 characters long."}, status=400)
+            return
+
+        if password != confirm_password:
+            self.send_json({"success": False, "error": "Passwords do not match."}, status=400)
+            return
+
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
+        if cursor.fetchone():
+            conn.close()
+            self.send_json({"success": False, "error": "An account with this email address already exists."}, status=400)
+            return
+
+        pwd_hash = hash_password(password)
+        try:
+            cursor.execute("""
+                INSERT INTO users (name, email, company, password_hash, auth_provider)
+                VALUES (?, ?, ?, ?, 'email')
+            """, (name, email, company, pwd_hash))
+            user_id = cursor.lastrowid
+            
+            session_token = secrets.token_hex(32)
+            expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
+            cursor.execute("""
+                INSERT INTO sessions (session_token, user_id, expires_at)
+                VALUES (?, ?, ?)
+            """, (session_token, user_id, expires_at))
+            conn.commit()
+            conn.close()
+
+            set_session_cookie(self, session_token)
+            self.send_json({
+                "success": True,
+                "user": {
+                    "id": user_id,
+                    "name": name,
+                    "email": email,
+                    "company": company,
+                    "avatar_url": None,
+                    "auth_provider": "email"
+                }
+            })
+        except Exception as e:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+            conn.close()
+            self.send_json({"success": False, "error": "Database error while creating user account."}, status=500)
+
+    def handle_auth_login(self, data):
+        client_ip = self.get_client_ip()
+        if is_rate_limited(client_ip, limit=5, window_seconds=60):
+            self.send_json({"success": False, "error": "Too many failed attempts. Please wait a minute before trying again."}, status=429)
+            return
+
+        email = data.get("email", "").strip().lower()
+        password = data.get("password", "")
+
+        if not email or not password:
+            self.send_json({"success": False, "error": "Email and password are required."}, status=400)
+            return
+
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, name, email, company, password_hash, avatar_url, auth_provider
+            FROM users WHERE email = ?
+        """, (email,))
+        row = cursor.fetchone()
+
+        if not row or not row[4] or not verify_password(password, row[4]):
+            conn.close()
+            self.send_json({"success": False, "error": "Invalid email or password."}, status=401)
+            return
+
+        user_id, name, email_val, company, _, avatar_url, auth_provider = row
+
+        cursor.execute("UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?", (user_id,))
+        
+        session_token = secrets.token_hex(32)
+        expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
+        cursor.execute("""
+            INSERT INTO sessions (session_token, user_id, expires_at)
+            VALUES (?, ?, ?)
+        """, (session_token, user_id, expires_at))
+        conn.commit()
+        conn.close()
+
+        set_session_cookie(self, session_token)
+        self.send_json({
+            "success": True,
+            "user": {
+                "id": user_id,
+                "name": name,
+                "email": email_val,
+                "company": company,
+                "avatar_url": avatar_url,
+                "auth_provider": auth_provider
+            }
+        })
+
+    def handle_auth_logout(self):
+        cookie_hdr = self.headers.get('Cookie', '')
+        cookies = parse_cookies(cookie_hdr)
+        token = cookies.get('taskflow_session')
+        if token:
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM sessions WHERE session_token = ?", (token,))
+            conn.commit()
+            conn.close()
+
+        clear_session_cookie(self)
+        self.send_json({"success": True, "message": "Successfully logged out."})
+
+    def handle_auth_me(self):
+        user = get_session_user(self)
+        if user:
+            self.send_json({"success": True, "authenticated": True, "user": user})
+        else:
+            self.send_json({"success": True, "authenticated": False, "user": None})
+
+    def handle_auth_google(self):
+        client_id, client_secret, redirect_uri = get_google_config()
+        if not client_id:
+            self.send_redirect("/?auth_error=Google+Sign-In+is+not+configured")
+            return
+
+        params = {
+            "client_id": client_id,
+            "redirect_uri": redirect_uri,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "access_type": "online",
+            "prompt": "select_account"
+        }
+        google_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params)
+        self.send_redirect(google_url)
+
+    def handle_auth_google_callback(self):
+        parsed_url = urlparse(self.path)
+        qs = parse_qs(parsed_url.query)
+
+        if "error" in qs:
+            err_msg = urllib.parse.quote(qs["error"][0])
+            self.send_redirect(f"/?auth_error={err_msg}")
+            return
+
+        code = qs.get("code", [None])[0]
+        client_id, client_secret, redirect_uri = get_google_config()
+
+        if not code or not client_id or not client_secret:
+            self.send_redirect("/?auth_error=Google+authentication+failed")
+            return
+
+        try:
+            token_url = "https://oauth2.googleapis.com/token"
+            token_data = urllib.parse.urlencode({
+                "code": code,
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "redirect_uri": redirect_uri,
+                "grant_type": "authorization_code"
+            }).encode('utf-8')
+
+            token_req = urllib.request.Request(
+                token_url,
+                data=token_data,
+                headers={"Content-Type": "application/x-www-form-urlencoded"}
+            )
+            with urllib.request.urlopen(token_req, timeout=10) as token_res:
+                token_json = json.loads(token_res.read().decode('utf-8'))
+                access_token = token_json.get("access_token")
+
+            if not access_token:
+                self.send_redirect("/?auth_error=Failed+to+obtain+Google+access+token")
+                return
+
+            userinfo_req = urllib.request.Request(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            with urllib.request.urlopen(userinfo_req, timeout=10) as userinfo_res:
+                userinfo_json = json.loads(userinfo_res.read().decode('utf-8'))
+
+            google_id = userinfo_json.get("sub")
+            email = userinfo_json.get("email", "").lower()
+            name = userinfo_json.get("name", "Google User")
+            picture = userinfo_json.get("picture")
+
+            if not email or not google_id:
+                self.send_redirect("/?auth_error=Google+account+missing+email")
+                return
+
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT id, name, email, company, avatar_url FROM users WHERE google_id = ? OR email = ?", (google_id, email))
+            row = cursor.fetchone()
+
+            if row:
+                user_id = row[0]
+                cursor.execute("""
+                    UPDATE users
+                    SET google_id = ?, avatar_url = COALESCE(?, avatar_url), last_login_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                """, (google_id, picture, user_id))
+            else:
+                cursor.execute("""
+                    INSERT INTO users (name, email, google_id, avatar_url, auth_provider)
+                    VALUES (?, ?, ?, ?, 'google')
+                """, (name, email, google_id, picture))
+                user_id = cursor.lastrowid
+
+            session_token = secrets.token_hex(32)
+            expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
+            cursor.execute("""
+                INSERT INTO sessions (session_token, user_id, expires_at)
+                VALUES (?, ?, ?)
+            """, (session_token, user_id, expires_at))
+            conn.commit()
+            conn.close()
+
+            set_session_cookie(self, session_token)
+            self.send_redirect("/#dashboard")
+        except Exception as e:
+            print(f"[GOOGLE AUTH ERROR] {e}")
+            self.send_redirect("/?auth_error=Google+login+processing+error")
+
+    def handle_protected_dashboard_data(self):
+        user = get_session_user(self)
+        if not user:
+            self.send_json({"success": False, "error": "Unauthorized access. Please log in."}, status=401)
+            return
+
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM leads WHERE user_id = ?", (user["id"],))
+        user_leads_count = cursor.fetchone()[0]
+        conn.close()
+
+        self.send_json({
+            "success": True,
+            "user": user,
+            "workspace": {
+                "active_projects": 12,
+                "pending_tasks": 5,
+                "completed_tasks": 48,
+                "team_activity_score": 98,
+                "user_leads_submitted": user_leads_count,
+                "recent_activities": [
+                    {"action": "AI Prioritization completed for Q3 Roadmap", "time": "12m ago", "status": "completed"},
+                    {"action": "Kanban Sprint board created", "time": "1h ago", "status": "active"},
+                    {"action": "Workflow Simulator run executed", "time": "3h ago", "status": "completed"}
+                ]
+            }
+        })
+
+    def handle_auth_forgot_password(self, data):
+        client_ip = self.get_client_ip()
+        if is_rate_limited(client_ip, limit=3, window_seconds=60):
+            self.send_json({"success": False, "error": "Too many reset attempts. Please wait a minute before trying again."}, status=429)
+            return
+
+        email = data.get("email", "").strip().lower()
+        if not email or "@" not in email or "." not in email:
+            self.send_json({"success": False, "error": "Please provide a valid work email address."}, status=400)
+            return
+
+        smtp_host, smtp_port, smtp_user, smtp_password, _, _ = get_smtp_config()
+        smtp_configured = bool(smtp_host and smtp_user and smtp_password)
+        if not smtp_configured:
+            self.send_json({
+                "success": False,
+                "configured": False,
+                "error": "Password reset email delivery is not yet configured. Please contact your workspace administrator."
+            }, status=400)
+            return
+
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name FROM users WHERE email = ?", (email,))
+        row = cursor.fetchone()
+
+        if row:
+            user_id, name = row
+            raw_token = secrets.token_hex(32)
+            token_hash = hashlib.sha256(raw_token.encode('utf-8')).hexdigest()
+            expires_at = (datetime.now(timezone.utc) + timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S')
+
+            cursor.execute("""
+                INSERT INTO password_resets (user_id, token_hash, expires_at)
+                VALUES (?, ?, ?)
+            """, (user_id, token_hash, expires_at))
+            conn.commit()
+
+            _, _, redirect_uri = get_google_config()
+            base_site_url = redirect_uri.split('/api/auth/')[0] if '/api/auth/' in redirect_uri else f"http://localhost:{PORT}"
+            reset_url = f"{base_site_url}/?reset_token={raw_token}"
+
+            send_password_reset_email(email, reset_url)
+
+        conn.close()
+        self.send_json({
+            "success": True,
+            "configured": True,
+            "message": "If an account with that email exists, password reset instructions have been sent."
+        })
+
+    def handle_auth_reset_password(self, data):
+        client_ip = self.get_client_ip()
+        if is_rate_limited(client_ip, limit=5, window_seconds=60):
+            self.send_json({"success": False, "error": "Too many requests. Please wait a minute before trying again."}, status=429)
+            return
+
+        raw_token = data.get("token", "").strip()
+        password = data.get("password", "")
+        confirm_password = data.get("confirm_password", "")
+
+        if not raw_token:
+            self.send_json({"success": False, "error": "Invalid or missing reset token."}, status=400)
+            return
+
+        if len(password) < 8:
+            self.send_json({"success": False, "error": "Password must be at least 8 characters long."}, status=400)
+            return
+
+        if password != confirm_password:
+            self.send_json({"success": False, "error": "Passwords do not match."}, status=400)
+            return
+
+        token_hash = hashlib.sha256(raw_token.encode('utf-8')).hexdigest()
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        now_str = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        cursor.execute("""
+            SELECT id, user_id, expires_at, used
+            FROM password_resets
+            WHERE token_hash = ?
+        """, (token_hash,))
+        row = cursor.fetchone()
+
+        if not row or row[3] == 1:
+            conn.close()
+            self.send_json({"success": False, "error": "Invalid or already used password reset link."}, status=400)
+            return
+
+        reset_id, user_id, expires_at_str, used = row
+        if expires_at_str < now_str:
+            conn.close()
+            self.send_json({"success": False, "error": "This password reset link has expired. Please request a new one."}, status=400)
+            return
+
+        pwd_hash = hash_password(password)
+        try:
+            cursor.execute("UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (pwd_hash, user_id))
+            cursor.execute("UPDATE password_resets SET used = 1 WHERE id = ?", (reset_id,))
+            conn.commit()
+            conn.close()
+
+            self.send_json({
+                "success": True,
+                "message": "Password updated successfully! You can now log in with your new password."
+            })
+        except Exception as e:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+            conn.close()
+            self.send_json({"success": False, "error": "Database error while updating password."}, status=500)
+
     def handle_lead_subscribe(self, data):
         email = data.get("email", "").strip()
         name = data.get("name", "").strip()
@@ -463,13 +1109,16 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json({"success": False, "error": "Message is required for sales inquiries."}, status=400)
                 return
 
+        user = get_session_user(self)
+        user_id = user["id"] if user else None
+
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         try:
             cursor.execute("""
-                INSERT INTO leads (email, name, company, message, source)
-                VALUES (?, ?, ?, ?, ?)
-            """, (email, name, company, message, source))
+                INSERT INTO leads (email, name, company, message, source, user_id)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (email, name, company, message, source, user_id))
             conn.commit()
             lead_id = cursor.lastrowid
             conn.close()
