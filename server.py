@@ -52,18 +52,22 @@ if not SESSION_SECRET:
 
 def get_google_config(handler=None):
     load_env()
-    client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
-    client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
-    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", "").strip()
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip().strip('"').strip("'")
+    client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip().strip('"').strip("'")
+    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", "").strip().strip('"').strip("'")
 
     if not redirect_uri:
         if handler and hasattr(handler, 'headers'):
-            host = handler.headers.get('Host')
-            proto = handler.headers.get('X-Forwarded-Proto', 'https' if host and 'onrender.com' in host else 'http')
+            host = handler.headers.get('Host', '').strip()
+            raw_proto = handler.headers.get('X-Forwarded-Proto', 'https' if host and 'onrender.com' in host else 'http')
+            proto = raw_proto.split(',')[0].strip() if raw_proto else 'https'
             if host:
                 redirect_uri = f"{proto}://{host}/api/auth/google/callback"
         if not redirect_uri:
             redirect_uri = f"http://localhost:{PORT}/api/auth/google/callback"
+
+    if redirect_uri.endswith('/'):
+        redirect_uri = redirect_uri.rstrip('/')
 
     return client_id, client_secret, redirect_uri
 
@@ -81,7 +85,7 @@ def send_password_reset_email(to_email, reset_url):
     host, port, user, password, from_email, use_tls = get_smtp_config()
     if not host or not user or not password:
         return False, "SMTP email server credentials are not configured in environment variables."
-    
+
     try:
         msg = MIMEMultipart('alternative')
         msg['Subject'] = "TaskFlow - Reset Your Password"
@@ -89,7 +93,7 @@ def send_password_reset_email(to_email, reset_url):
         msg['To'] = to_email
 
         text_content = f"Hello,\n\nYou requested a password reset for your TaskFlow workspace account.\nClick the link below to set a new password:\n{reset_url}\n\nThis link will expire in 1 hour.\nIf you did not request this reset, please ignore this email.\n\nThe TaskFlow Team"
-        
+
         html_content = f"""
         <div style="font-family:'Plus Jakarta Sans', Arial, sans-serif; max-width:560px; margin:0 auto; padding:2rem; background:#F4F6FB; border-radius:16px; color:#0F172A;">
           <div style="text-align:center; margin-bottom:1.5rem;">
@@ -194,7 +198,11 @@ def get_session_user(handler):
     }
 
 def set_session_cookie(handler, session_token: str, max_age_seconds: int = 604800):
-    cookie_val = f"taskflow_session={session_token}; Path=/; HttpOnly; SameSite=Lax; Max-Age={max_age_seconds}"
+    host = handler.headers.get('Host', '') if hasattr(handler, 'headers') else ''
+    proto = handler.headers.get('X-Forwarded-Proto', '') if hasattr(handler, 'headers') else ''
+    is_secure = 'https' in proto or 'onrender.com' in host
+    secure_flag = "; Secure" if is_secure else ""
+    cookie_val = f"taskflow_session={session_token}; Path=/; HttpOnly; SameSite=Lax; Max-Age={max_age_seconds}{secure_flag}"
     if not hasattr(handler, 'extra_headers'):
         handler.extra_headers = []
     handler.extra_headers.append(('Set-Cookie', cookie_val))
