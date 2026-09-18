@@ -385,8 +385,9 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def end_headers(self):
         origin = self.headers.get('Origin')
-        if origin and ("localhost" in origin or "127.0.0.1" in origin):
+        if origin and ("localhost" in origin or "127.0.0.1" in origin or "onrender.com" in origin):
             self.send_header('Access-Control-Allow-Origin', origin)
+            self.send_header('Access-Control-Allow-Credentials', 'true')
             self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
             self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         super().end_headers()
@@ -1013,8 +1014,10 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
             """, (user_id, token_hash, expires_at))
             conn.commit()
 
-            _, _, redirect_uri = get_google_config()
-            base_site_url = redirect_uri.split('/api/auth/')[0] if '/api/auth/' in redirect_uri else f"http://localhost:{PORT}"
+            base_site_url = os.environ.get("BASE_URL", "").strip()
+            if not base_site_url:
+                _, _, redirect_uri = get_google_config()
+                base_site_url = redirect_uri.split('/api/auth/')[0] if '/api/auth/' in redirect_uri else f"http://localhost:{PORT}"
             reset_url = f"{base_site_url}/?reset_token={raw_token}"
 
             send_password_reset_email(email, reset_url)
