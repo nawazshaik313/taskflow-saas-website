@@ -50,11 +50,21 @@ SESSION_SECRET = os.environ.get("SESSION_SECRET", "")
 if not SESSION_SECRET:
     SESSION_SECRET = secrets.token_hex(32)
 
-def get_google_config():
+def get_google_config(handler=None):
     load_env()
     client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
     client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
-    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", f"http://localhost:{PORT}/api/auth/google/callback").strip()
+    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", "").strip()
+
+    if not redirect_uri:
+        if handler and hasattr(handler, 'headers'):
+            host = handler.headers.get('Host')
+            proto = handler.headers.get('X-Forwarded-Proto', 'https' if host and 'onrender.com' in host else 'http')
+            if host:
+                redirect_uri = f"{proto}://{host}/api/auth/google/callback"
+        if not redirect_uri:
+            redirect_uri = f"http://localhost:{PORT}/api/auth/google/callback"
+
     return client_id, client_secret, redirect_uri
 
 def get_smtp_config():
@@ -841,8 +851,9 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json({"success": True, "authenticated": False, "user": None})
 
     def handle_auth_google(self):
-        client_id, client_secret, redirect_uri = get_google_config()
+        client_id, client_secret, redirect_uri = get_google_config(self)
         if not client_id:
+            print("[GOOGLE AUTH ERROR] Missing GOOGLE_CLIENT_ID environment variable.")
             self.send_redirect("/?auth_error=Google+Sign-In+is+not+configured")
             return
 
@@ -855,6 +866,7 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
             "prompt": "select_account"
         }
         google_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params)
+        print(f"[GOOGLE AUTH START] Redirecting to Google OAuth with redirect_uri: {redirect_uri}")
         self.send_redirect(google_url)
 
     def handle_auth_google_callback(self):
@@ -862,15 +874,23 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
         qs = parse_qs(parsed_url.query)
 
         if "error" in qs:
-            err_msg = urllib.parse.quote(qs["error"][0])
+            raw_err = qs["error"][0]
+            print(f"[GOOGLE AUTH REJECTED] Google returned OAuth error in callback: {raw_err}")
+            err_msg = urllib.parse.quote("Google authentication rejected")
             self.send_redirect(f"/?auth_error={err_msg}")
             return
 
         code = qs.get("code", [None])[0]
-        client_id, client_secret, redirect_uri = get_google_config()
+        client_id, client_secret, redirect_uri = get_google_config(self)
 
-        if not code or not client_id or not client_secret:
-            self.send_redirect("/?auth_error=Google+authentication+failed")
+        if not client_id or not client_secret:
+            print("[GOOGLE AUTH ERROR] Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET environment variable.")
+            self.send_redirect("/?auth_error=Google+login+is+not+configured")
+            return
+
+        if not code:
+            print("[GOOGLE AUTH ERROR] Callback invoked without authorization code.")
+            self.send_redirect("/?auth_error=Missing+Google+authorization+code")
             return
 
         try:
@@ -888,11 +908,24 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
                 data=token_data,
                 headers={"Content-Type": "application/x-www-form-urlencoded"}
             )
-            with urllib.request.urlopen(token_req, timeout=10) as token_res:
-                token_json = json.loads(token_res.read().decode('utf-8'))
-                access_token = token_json.get("access_token")
+
+            try:
+                with urllib.request.urlopen(token_req, timeout=10) as token_res:
+                    token_json = json.loads(token_res.read().decode('utf-8'))
+                    access_token = token_json.get("access_token")
+            except urllib.error.HTTPError as he:
+                error_body = ""
+                try:
+                    error_body = he.read().decode('utf-8')
+                except Exception:
+                    pass
+                print(f"[GOOGLE OAUTH TOKEN HTTP ERROR] Status {he.code}: {he.reason} | Response Body: {error_body} | redirect_uri used: {redirect_uri}")
+                safe_err = urllib.parse.quote(f"Google login processing error (HTTP {he.code})")
+                self.send_redirect(f"/?auth_error={safe_err}")
+                return
 
             if not access_token:
+                print("[GOOGLE AUTH ERROR] Token exchange response missing access_token.")
                 self.send_redirect("/?auth_error=Failed+to+obtain+Google+access+token")
                 return
 
@@ -900,8 +933,19 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "https://www.googleapis.com/oauth2/v3/userinfo",
                 headers={"Authorization": f"Bearer {access_token}"}
             )
-            with urllib.request.urlopen(userinfo_req, timeout=10) as userinfo_res:
-                userinfo_json = json.loads(userinfo_res.read().decode('utf-8'))
+
+            try:
+                with urllib.request.urlopen(userinfo_req, timeout=10) as userinfo_res:
+                    userinfo_json = json.loads(userinfo_res.read().decode('utf-8'))
+            except urllib.error.HTTPError as he:
+                error_body = ""
+                try:
+                    error_body = he.read().decode('utf-8')
+                except Exception:
+                    pass
+                print(f"[GOOGLE OAUTH USERINFO HTTP ERROR] Status {he.code}: {he.reason} | Response Body: {error_body}")
+                self.send_redirect("/?auth_error=Failed+to+fetch+Google+user+profile")
+                return
 
             google_id = userinfo_json.get("sub")
             email = userinfo_json.get("email", "").lower()
@@ -909,6 +953,7 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
             picture = userinfo_json.get("picture")
 
             if not email or not google_id:
+                print(f"[GOOGLE AUTH ERROR] Google profile missing sub or email: sub={google_id}, email={email}")
                 self.send_redirect("/?auth_error=Google+account+missing+email")
                 return
 
@@ -942,9 +987,10 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
             conn.close()
 
             set_session_cookie(self, session_token)
+            print(f"[GOOGLE AUTH SUCCESS] Authenticated user '{email}' via Google. Redirecting to workspace dashboard.")
             self.send_redirect("/#dashboard")
         except Exception as e:
-            print(f"[GOOGLE AUTH ERROR] {e}")
+            print(f"[GOOGLE AUTH UNHANDLED ERROR] {type(e).__name__}: {e}")
             self.send_redirect("/?auth_error=Google+login+processing+error")
 
     def handle_protected_dashboard_data(self):
