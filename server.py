@@ -54,17 +54,25 @@ def get_google_config(handler=None):
     load_env()
     client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip().strip('"').strip("'")
     client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip().strip('"').strip("'")
-    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", "").strip().strip('"').strip("'")
+    env_redirect = os.environ.get("GOOGLE_REDIRECT_URI", "").strip().strip('"').strip("'")
+
+    redirect_uri = ""
+
+    if handler and hasattr(handler, 'headers'):
+        host = handler.headers.get('Host', '').strip()
+        raw_proto = handler.headers.get('X-Forwarded-Proto', 'https' if host and 'onrender.com' in host else 'http')
+        proto = raw_proto.split(',')[0].strip() if raw_proto else ('https' if 'onrender.com' in host else 'http')
+
+        if "localhost" in host or "127.0.0.1" in host:
+            redirect_uri = f"http://{host}/api/auth/google/callback"
+        elif host:
+            redirect_uri = f"{proto}://{host}/api/auth/google/callback"
 
     if not redirect_uri:
-        if handler and hasattr(handler, 'headers'):
-            host = handler.headers.get('Host', '').strip()
-            raw_proto = handler.headers.get('X-Forwarded-Proto', 'https' if host and 'onrender.com' in host else 'http')
-            proto = raw_proto.split(',')[0].strip() if raw_proto else 'https'
-            if host:
-                redirect_uri = f"{proto}://{host}/api/auth/google/callback"
-        if not redirect_uri:
-            redirect_uri = f"http://localhost:{PORT}/api/auth/google/callback"
+        redirect_uri = env_redirect
+
+    if not redirect_uri:
+        redirect_uri = f"http://localhost:{PORT}/api/auth/google/callback"
 
     if redirect_uri.endswith('/'):
         redirect_uri = redirect_uri.rstrip('/')
@@ -861,7 +869,7 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
     def handle_auth_google(self):
         client_id, client_secret, redirect_uri = get_google_config(self)
         if not client_id:
-            print("[GOOGLE AUTH ERROR] Missing GOOGLE_CLIENT_ID environment variable.")
+            print("[GOOGLE AUTH ERROR] Missing GOOGLE_CLIENT_ID environment variable.", flush=True)
             self.send_redirect("/?auth_error=Google+Sign-In+is+not+configured")
             return
 
@@ -874,7 +882,7 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
             "prompt": "select_account"
         }
         google_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params)
-        print(f"[GOOGLE AUTH START] Redirecting to Google OAuth with redirect_uri: {redirect_uri}")
+        print(f"[GOOGLE AUTH START] Redirecting to Google OAuth with redirect_uri: {redirect_uri}", flush=True)
         self.send_redirect(google_url)
 
     def handle_auth_google_callback(self):
@@ -883,7 +891,7 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
 
         if "error" in qs:
             raw_err = qs["error"][0]
-            print(f"[GOOGLE AUTH REJECTED] Google returned OAuth error in callback: {raw_err}")
+            print(f"[GOOGLE AUTH REJECTED] Google returned OAuth error in callback: {raw_err}", flush=True)
             err_msg = urllib.parse.quote("Google authentication rejected")
             self.send_redirect(f"/?auth_error={err_msg}")
             return
@@ -892,12 +900,12 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
         client_id, client_secret, redirect_uri = get_google_config(self)
 
         if not client_id or not client_secret:
-            print("[GOOGLE AUTH ERROR] Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET environment variable.")
+            print("[GOOGLE AUTH ERROR] Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET environment variable.", flush=True)
             self.send_redirect("/?auth_error=Google+login+is+not+configured")
             return
 
         if not code:
-            print("[GOOGLE AUTH ERROR] Callback invoked without authorization code.")
+            print("[GOOGLE AUTH ERROR] Callback invoked without authorization code.", flush=True)
             self.send_redirect("/?auth_error=Missing+Google+authorization+code")
             return
 
@@ -914,7 +922,10 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
             token_req = urllib.request.Request(
                 token_url,
                 data=token_data,
-                headers={"Content-Type": "application/x-www-form-urlencoded"}
+                headers={
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "User-Agent": "TaskFlow-SaaS-Backend/3.2"
+                }
             )
 
             try:
@@ -927,7 +938,7 @@ class TaskFlowRequestHandler(http.server.SimpleHTTPRequestHandler):
                     error_body = he.read().decode('utf-8')
                 except Exception:
                     pass
-                print(f"[GOOGLE OAUTH TOKEN HTTP ERROR] Status {he.code}: {he.reason} | Response Body: {error_body} | redirect_uri used: {redirect_uri}")
+                print(f"[GOOGLE OAUTH TOKEN HTTP ERROR] Status {he.code}: {he.reason} | Response Body: {error_body} | redirect_uri used: {redirect_uri}", flush=True)
                 safe_err = urllib.parse.quote(f"Google login processing error (HTTP {he.code})")
                 self.send_redirect(f"/?auth_error={safe_err}")
                 return
